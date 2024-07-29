@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Proxy Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .response pre {
+            margin: 0;
+        }
+        #imageContainer {
+            margin-top: 20px;
+        }
+        #imageContainer img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Proxy Test</h1>
+    <button onclick="callVAPIX()">Call VAPIX Custom HTTP Header</button>
+    <button onclick="callVAPIX2()">Call VAPIX SSH Info</button>
+    <button onclick="fetchImage()">Fetch Image</button>
+
+    <div id="responseVAPIX" class="response">
+        <h2>Response from VAPIX Custom HTTP Header</h2>
+        <pre id="responseVAPIXContent">Waiting for response...</pre>
+    </div>
+
+    <div id="responseVAPIX2" class="response">
+        <h2>Response from VAPIX SSH Info</h2>
+        <pre id="responseVAPIX2Content">Waiting for response...</pre>
+    </div>
+
+    <div id="imageContainer" class="response">
+        <h2>Snapshot Image</h2>
+        <img id="snapshotImage" src="" alt="Snapshot will be displayed here">
+    </div>
+
+    <script>
+        async function callVAPIX() {
+            try {
+                const response = await fetch('http://localhost:3000/api/axis-cgi/customhttpheader.cgi', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        apiVersion: '1.0',
+                        method: 'list'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('responseVAPIXContent').textContent = JSON.stringify(data, null, 2);
+                } else {
+                    document.getElementById('responseVAPIXContent').textContent = `Error: ${response.status}`;
+                }
+            } catch (error) {
+                document.getElementById('responseVAPIXContent').textContent = `Fetch error: ${error.message}`;
+            }
+        }
+
+        async function callVAPIX2() {
+            try {
+                const response = await fetch('http://localhost:3000/api/axis-cgi/ssh.cgi', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        apiVersion: '1.0',
+                        method: 'getSshInfo'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('responseVAPIX2Content').textContent = JSON.stringify(data, null, 2);
+                } else {
+                    document.getElementById('responseVAPIX2Content').textContent = `Error: ${response.status}`;
+                }
+            } catch (error) {
+                document.getElementById('responseVAPIX2Content').textContent = `Fetch error: ${error.message}`;
+            }
+        }
+
+        async function fetchImage() {
+            try {
+                const response = await fetch('http://localhost:3000/api/axis-cgi/jpg/image.cgi?resolution=320x240&compression=25&camera=1');
+
+                if (response.ok) {
+                    const imageUrl = URL.createObjectURL(await response.blob());
+                    document.getElementById('snapshotImage').src = imageUrl;
+                } else {
+                    document.getElementById('snapshotImage').src = '';
+                    alert(`Error fetching image: ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('snapshotImage').src = '';
+                alert(`Fetch error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
